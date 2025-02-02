@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { User } from "../models/user.models";
+import { User } from "../models/user.model.js";
 const authRouter = Router();
 
 authRouter.post("/callback", async (req,res) => {
@@ -10,7 +10,7 @@ authRouter.post("/callback", async (req,res) => {
             await User.create({
                 clerkId: id,
                 fullName: `${firstName} ${lastName}`,
-                imageUrl
+                imageUrl,
             })
         }
         res.status(200).json({success:true})
