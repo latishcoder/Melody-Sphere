@@ -7,57 +7,44 @@ const AudioPlayer = () => {
 
 	const { currentSong, isPlaying, playNext } = usePlayerStore();
 
-	// Handle Play/Pause Logic
+	// handle play/pause logic
 	useEffect(() => {
-		const audio = audioRef.current;
-		if (!audio) return;
-
-		if (isPlaying) {
-			// Attempt to play audio
-			audio.play().catch((error) => console.error("Audio play error:", error));
-		} else {
-			// Ensure audio pauses when `isPlaying` is false
-			audio.pause();
-			console.log("Paused:", audio.paused); // Check if audio actually paused
-		}
+		if (isPlaying) audioRef.current?.play();
+		else audioRef.current?.pause();
 	}, [isPlaying]);
 
-	// Handle song ends
+	// handle song ends
 	useEffect(() => {
 		const audio = audioRef.current;
-		if (!audio) return;
 
 		const handleEnded = () => {
 			playNext();
 		};
 
-		audio.addEventListener("ended", handleEnded);
-		return () => {
-			audio.removeEventListener("ended", handleEnded);
-		};
+		audio?.addEventListener("ended", handleEnded);
+
+		return () => audio?.removeEventListener("ended", handleEnded);
 	}, [playNext]);
 
-	// Handle song changes
+	// handle song changes
 	useEffect(() => {
+		if (!audioRef.current || !currentSong) return;
+
 		const audio = audioRef.current;
-		if (!audio || !currentSong) return;
 
-		// Check if it's a new song
-		const isSongChange = prevSongRef.current !== currentSong.audioUrl;
+		// check if this is actually a new song
+		const isSongChange = prevSongRef.current !== currentSong?.audioUrl;
 		if (isSongChange) {
-			audio.src = currentSong.audioUrl;
-			audio.load(); // Ensure new media is loaded
+			audio.src = currentSong?.audioUrl;
+			// reset the playback position
 			audio.currentTime = 0;
-			prevSongRef.current = currentSong.audioUrl;
 
-			// Auto-play if `isPlaying` is true
-			if (isPlaying) {
-				audio.play().catch((error) => console.error("Audio play error:", error));
-			}
+			prevSongRef.current = currentSong?.audioUrl;
+
+			if (isPlaying) audio.play();
 		}
 	}, [currentSong, isPlaying]);
 
 	return <audio ref={audioRef} />;
 };
-
 export default AudioPlayer;
