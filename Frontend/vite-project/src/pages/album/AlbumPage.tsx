@@ -5,6 +5,7 @@ import { usePlayerStore } from "@/stores/usePlayerStore";
 import { Clock, Pause, Play } from "lucide-react";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+// import { formatDuration } from "@/utils/utils";
 
 export const formatDuration = (seconds: number) => {
 	const minutes = Math.floor(seconds / 60);

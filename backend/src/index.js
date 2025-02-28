@@ -6,23 +6,21 @@ import path from "path";
 import cors from "cors";
 import fs from "fs";
 import cron from "node-cron";
-
+import { createServer } from "http";
 
 import { connectDB } from "./lib/db.js";
 import userRoutes from "./routes/user.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
-import authRoutes from "./routes/auth.routes.js";
+import authRoutes from "./routes/auth.routes.js"; // ✅ Authentication Router
 import songRoutes from "./routes/song.routes.js";
 import albumRoutes from "./routes/album.routes.js";
 import statRoutes from "./routes/stat.routes.js";
-import { createServer } from "http";
 
 dotenv.config();
 
 const __dirname = path.resolve();
 const app = express();
 const PORT = process.env.PORT;
-
 const httpServer = createServer(app);
 
 app.use(
@@ -32,49 +30,47 @@ app.use(
 	})
 );
 
-app.use(express.json()); // to parse req.body
-app.use(clerkMiddleware()); // this will add auth to req obj => req.auth
+app.use(express.json()); // Parse JSON body
+app.use(clerkMiddleware()); // Attach Clerk authentication to request
+
 app.use(
 	fileUpload({
 		useTempFiles: true,
 		tempFileDir: path.join(__dirname, "tmp"),
 		createParentPath: true,
-		limits: {
-			fileSize: 10 * 1024 * 1024, // 10MB  max file size
-		},
+		limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max file size
 	})
 );
 
-// cron jobs
+// ✅ Clean temp directory every hour
 const tempDir = path.join(process.cwd(), "tmp");
 cron.schedule("0 * * * *", () => {
 	if (fs.existsSync(tempDir)) {
 		fs.readdir(tempDir, (err, files) => {
-			if (err) {
-				console.log("error", err);
-				return;
-			}
-			for (const file of files) {
-				fs.unlink(path.join(tempDir, file), (err) => {});
-			}
+			if (err) return console.log("Error:", err);
+			files.forEach((file) => fs.unlink(path.join(tempDir, file), () => {}));
 		});
 	}
 });
 
+// ✅ Use Authentication Router
+app.use("/api/auth", authRoutes); // This handles all auth-related routes
+
+// ✅ Other Routes
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/auth", authRoutes);
 app.use("/api/songs", songRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/stats", statRoutes);
 
-
-// error handler
+// ✅ Error Handler
 app.use((err, req, res, next) => {
-	res.status(500).json({ message: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+	res.status(500).json({
+		message: process.env.NODE_ENV === "production" ? "Internal server error" : err.message,
+	});
 });
 
 httpServer.listen(PORT, () => {
-	console.log("Server is running on port " + PORT);
+	console.log(`🚀 Server running on port ${PORT}`);
 	connectDB();
 });
