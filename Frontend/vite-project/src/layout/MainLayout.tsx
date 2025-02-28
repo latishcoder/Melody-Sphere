@@ -34,7 +34,7 @@ const MainLayout = () => {
             <ResizablePanel defaultSize={isMobile ? 80 : 60}>
                 <Outlet />
             </ResizablePanel>
-            (!isMobile && (
+            {!isMobile && (
                 <>
                 <ResizableHandle className="w-2 bg-black rounded-lg transition-colors" />
            {/* right sidebar */}
@@ -42,7 +42,7 @@ const MainLayout = () => {
                 <FriendsActivity />
             </ResizablePanel>
                 </>
-            ))
+            )}
         </ResizablePanelGroup>
 
         <PlaybackControls />

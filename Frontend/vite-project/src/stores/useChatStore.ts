@@ -1,35 +1,48 @@
 import { axiosInstance } from "@/lib/axios";
+import { User } from "@/types";
 import { create } from "zustand";
 
 interface ChatStore {
-    users: any[];
-    fetchUsers: () => Promise<void>;
-    isLoading: boolean;
-    error: string | null;    
+	users: User[];
+	isLoading: boolean;
+	error: string | null;
+	selectedUser: User | null;
+	messages: any[];
+	fetchUsers: () => Promise<void>;
+	fetchMessages: (userId: string) => Promise<void>;
+	setSelectedUser: (user: User | null) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
-    users: [],
-    isLoading: false,
-    error: null,
-    fetchUsers: async() => {
-        set({isLoading: true, error: null})
-        try {
-            const response = await axiosInstance.get("/user");
-            set({users: response.data})
-        } catch (error:any) {
-            let errorMessage = "An unexpected error occurred";
+	users: [],
+	isLoading: false,
+	error: null,
+	selectedUser: null,
+	messages: [],
 
-            // Ensure `error.response` exists before accessing `data.message`
-            if (error.response) {
-                errorMessage = error.response.data?.message || `Error: ${error.response.status}`;
-            } else if (error.request) {
-                errorMessage = "No response from server. Check your network.";
-            } else {
-                errorMessage = error.message;
-            }
-            set({error: errorMessage})
-        } finally {
-            set({isLoading: false})}
-    }
-}))
+	setSelectedUser: (user) => set({ selectedUser: user }),
+
+	fetchUsers: async () => {
+		set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.get("/users");
+			set({ users: response.data });
+		} catch (error: any) {
+			set({ error: error.response.data.message });
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	fetchMessages: async (userId: string) => {
+		set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.get(`/users/messages/${userId}`);
+			set({ messages: response.data });
+		} catch (error: any) {
+			set({ error: error.response.data.message });
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+}));
